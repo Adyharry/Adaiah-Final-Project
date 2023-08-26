@@ -5,23 +5,78 @@ format: html
 editor: visual
 ---
 
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+## **This data set contains data on SARS-CoV2 testing, providing a snapshot of the first 100 days of testing at a single pediatric hospital, with over 15,000 tests performed on patients in a variety of settings.**
 
 ```{r}
-1 + 1
-```
+#|message : false
+library(tidyverse)
+library(gtsummary)
+library(broom)
 
-You can add options to executable code like this
+load(here::here("Data/covid_testing.rda"))
+
+```
 
 ```{r}
-#| echo: false
-2 * 2
+#| label: tbl-one
+#| tbl-cap: "Descriptive statistics"
+table_1 <- tbl_summary(
+  covid_testing,
+  by = result,
+  include = c(result, clinic_name, demo_group,
+              patient_class, rec_ver_tat, col_rec_tat, age, gender),
+  label = list(
+    result ~ "Test result",
+    clinic_name ~ "Clinic",
+    demo_group ~ "Demographic group",
+    patient_class ~ "Patient class",
+    rec_ver_tat ~ "Result time",
+    col_rec_tat ~ "Lab time",
+    age ~ "Age", 
+    gender ~ "Gender"
+  ),
+  missing_text = "Missing")
+table_1
+
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+```{r}
+inline_text(table_1, variable = "age", column = 'invalid')
+```
+
+```{r}
+covid_testing <- covid_testing |> mutate(gender_binary = ifelse(gender == "female", 1, 0))
+
+#Fitting a logistic regression model and present well-formatted results from the regression 
+
+
+logistic_model <- glm(gender_binary ~ result + rec_ver_tat + age,
+                      data = covid_testing, family = binomial())
+
+```
+
+```{r}
+
+tbl_regression(
+  logistic_model,
+  exponentiate = TRUE,
+  label = list(
+    result ~ "Test result",
+    rec_ver_tat ~ "Result time",
+    age ~ "Age"
+  ))
+```
+
+```{r}
+#| label: fig-hist
+#| fig-cap: "This is a histogram of childrens age"
+Figure1 <- hist(covid_testing$age)
+```
+
+The mean age of the sample was `r mean(covid_testing$age)`
+
+@tbl-one describes the demographics of the population tested while @fig-hist describes the ages of children tested.
+
+```{r}
+
+```

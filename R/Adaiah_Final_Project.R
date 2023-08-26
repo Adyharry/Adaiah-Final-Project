@@ -33,11 +33,48 @@ tbl_summary(
     gender ~ "Gender"
   ),
   missing_text = "Missing")
-#Add a variable
+
+#Adding a new variable
+
 covid_testing <- covid_testing |> mutate(gender_binary = ifelse(gender == "female", 1, 0))
 
-#Fitting a logistic regression model  
+#Fitting a logistic regression model and present well-formatted results from the regression 
 
 
 logistic_model <- glm(gender_binary ~ result + rec_ver_tat + age,
                       data = covid_testing, family = binomial())
+
+
+tbl_regression(
+  logistic_model,
+  exponentiate = TRUE,
+  label = list(
+    result ~ "Test result",
+    rec_ver_tat ~ "Result time",
+    age ~ "Age"
+  ))
+
+
+#Creating a histogram
+
+hist(covid_testing$age)
+
+
+#Write and use a function that does something with the data 
+
+sd <- function(age) {
+  sd_value <- sqrt(var(age))
+  return (sd_value)}
+
+sd(covid_testing$age)
+
+
+
+
+
+
+
+
+
+
+
